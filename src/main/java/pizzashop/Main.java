@@ -16,9 +16,17 @@ import pizzashop.repository.MenuRepository;
 import pizzashop.repository.PaymentRepository;
 import pizzashop.service.PizzaService;
 
+import java.io.*;
+import java.text.Format;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.Formatter;
 import java.util.Optional;
 
 public class Main extends Application {
+
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -42,9 +50,22 @@ public class Main extends Application {
                 Optional<ButtonType> result = exitAlert.showAndWait();
                 if (result.get() == ButtonType.YES){
                     //Stage stage = (Stage) this.getScene().getWindow();
-                    System.out.println("Incasari cash: "+service.getTotalAmount(PaymentType.Cash));
-                    System.out.println("Incasari card: "+service.getTotalAmount(PaymentType.Card));
+                    //System.out.println("Incasari cash: "+service.getTotalAmount(PaymentType.Cash));
+                    //System.out.println("Incasari card: "+service.getTotalAmount(PaymentType.Card));
 
+                    File file_raport= null;
+                    // SALVAREA RAPOARTELOR IN FISIERE SEPARTE PENTRU FIECARE ZI
+                    file_raport = new File("data/reports/raport_"+ DateTimeFormatter.ofPattern("dd-MM-YYYY").format(LocalDate.now())+".txt");
+                    try(BufferedWriter bufferedWriter=new BufferedWriter(new FileWriter(file_raport))){
+                        bufferedWriter.write(String.valueOf(service.getTotalAmount(PaymentType.Cash))+",Cash");
+                        bufferedWriter.newLine();
+                        bufferedWriter.write(String.valueOf(service.getTotalAmount(PaymentType.Card))+",Card");
+                        bufferedWriter.newLine();
+
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
                     primaryStage.close();
                 }
                 // consume event
