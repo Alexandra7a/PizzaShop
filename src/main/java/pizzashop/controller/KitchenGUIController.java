@@ -4,13 +4,15 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import java.util.Calendar;
 
 public class KitchenGUIController {
     @FXML
-    private ListView kitchenOrdersList;
+    private ListView<String> kitchenOrdersList;
     @FXML
     public Button cook;
     @FXML
@@ -25,6 +27,7 @@ public class KitchenGUIController {
     public  Thread addOrders = new Thread(new Runnable() {
         @Override
         public void run() {
+
             while (true) {
                 Platform.runLater(new Runnable() {
                     @Override
@@ -38,6 +41,7 @@ public class KitchenGUIController {
                     break;
                 }
             }
+
         }
     });
 
@@ -48,6 +52,11 @@ public class KitchenGUIController {
         //Controller for Cook Button
         cook.setOnAction(event -> {
             selectedOrder = kitchenOrdersList.getSelectionModel().getSelectedItem();
+            if(this.selectedOrder == null) {
+                Alert error = new Alert(Alert.AlertType.ERROR, "No selection made");
+                error.show();
+                return;
+            }
             kitchenOrdersList.getItems().remove(selectedOrder);
             kitchenOrdersList.getItems().add(selectedOrder.toString()
                      .concat(" Cooking started at: ").toUpperCase()
@@ -56,6 +65,11 @@ public class KitchenGUIController {
         //Controller for Ready Button
         ready.setOnAction(event -> {
             selectedOrder = kitchenOrdersList.getSelectionModel().getSelectedItem();
+            if(this.selectedOrder == null) {
+                Alert error = new Alert(Alert.AlertType.ERROR, "No selection made");
+                error.show();
+                return;
+            }
             kitchenOrdersList.getItems().remove(selectedOrder);
             extractedTableNumberString = selectedOrder.toString().subSequence(5, 6).toString();
             extractedTableNumberInteger = Integer.valueOf(extractedTableNumberString);

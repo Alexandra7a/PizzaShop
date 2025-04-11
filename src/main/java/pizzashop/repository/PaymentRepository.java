@@ -14,7 +14,7 @@ public class PaymentRepository {
 
     public PaymentRepository(){
         this.paymentList = new ArrayList<>();
-        readPayments();
+        //readPayments(); // AM ELIMINAT PENTRU A NU MAI FACE SUMA PE TOT FISIERUL CI NUMAI PE ZIUA CURENTA
     }
 
     private void readPayments(){
@@ -62,7 +62,7 @@ public class PaymentRepository {
 
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter(file));
+            bw = new BufferedWriter(new FileWriter(file,true)); // APPEND IN FISIER, IN LOC DE WRITE OVER
             for (Payment p:paymentList) {
                 System.out.println(p.toString());
                 bw.write(p.toString());

@@ -16,15 +16,50 @@ import pizzashop.repository.MenuRepository;
 import pizzashop.repository.PaymentRepository;
 import pizzashop.service.PizzaService;
 
+import java.io.*;
+import java.text.Format;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.Formatter;
 import java.util.Optional;
 
 public class Main extends Application {
 
-    @Override
-    public void start(Stage primaryStage) throws Exception{
 
-        MenuRepository repoMenu=new MenuRepository();
-        PaymentRepository payRepo= new PaymentRepository();
+    public void writeInFiles(PizzaService service){
+        File file_raport = new File("data/reports/raport_" + DateTimeFormatter.ofPattern("dd-MM-YYYY").format(LocalDate.now()) + ".txt");
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file_raport))) {
+            int i = 0;
+
+            while (i < 1) {
+                if (service.getTotalAmount((PaymentType.Cash)) > 0) {
+                    bufferedWriter.write(String.valueOf(service.getTotalAmount(PaymentType.Cash)) + ",Cash");
+                    bufferedWriter.newLine();
+                } else {
+                    bufferedWriter.write("cash intake does not exist today!");
+                    bufferedWriter.newLine();
+                }
+
+                if (service.getTotalAmount((PaymentType.Card)) > 0) {
+                    bufferedWriter.write(String.valueOf(service.getTotalAmount(PaymentType.Card)) + ",Card");
+                    bufferedWriter.newLine();
+                } else {
+                    bufferedWriter.write("card intake does not exist today!");
+                    bufferedWriter.newLine();
+                }
+                i++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+
+        MenuRepository repoMenu = new MenuRepository();
+        PaymentRepository payRepo = new PaymentRepository();
         PizzaService service = new PizzaService(repoMenu, payRepo);
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/mainFXML.fxml"));
@@ -40,22 +75,14 @@ public class Main extends Application {
             public void handle(WindowEvent event) {
                 Alert exitAlert = new Alert(Alert.AlertType.CONFIRMATION, "Would you like to exit the Main window?", ButtonType.YES, ButtonType.NO);
                 Optional<ButtonType> result = exitAlert.showAndWait();
-                if (result.get() == ButtonType.YES){
-                    //Stage stage = (Stage) this.getScene().getWindow();
-                    System.out.println("Incasari cash: "+service.getTotalAmount(PaymentType.Cash));
-                    System.out.println("Incasari card: "+service.getTotalAmount(PaymentType.Card));
+                if (result.get() == ButtonType.YES) {
 
-                    primaryStage.close();
-                }
-                // consume event
-                else if (result.get() == ButtonType.NO){
+                    writeInFiles(service);
+
+                } else {
                     event.consume();
                 }
-                else {
-                    event.consume();
-
-                }
-
+                primaryStage.close();
             }
         });
         primaryStage.setScene(new Scene(box));
@@ -64,6 +91,7 @@ public class Main extends Application {
         kitchenGUI.KitchenGUI();
     }
 
-    public static void main(String[] args) { launch(args);
+    public static void main(String[] args) {
+        launch(args);
     }
 }
