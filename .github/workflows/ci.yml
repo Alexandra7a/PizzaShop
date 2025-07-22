@@ -1,4 +1,4 @@
-Based on the provided information about the PizzaShop project, here is a CI configuration in YAML format using GitHub Actions. This configuration enforces quality gates through build, test, and linting stages while utilizing Maven for build management and JavaFX as the framework:
+Based on the provided project structure, metadata, and the optimized prompt, I will generate a GitHub Actions CI configuration in YAML format for your project. The configuration will include steps for environment setup, quality gates, and other essential aspects outlined in the prompt.
 
 
 # FILENAME: .github/workflows/ci.yml
@@ -20,76 +20,52 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
 
-    - name: Setup Maven Cache
+    # DEPENDENCY CACHING
+    - name: Cache Maven packages
       uses: actions/cache@v3
       with:
         path: ~/.m2/repository
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
     # LINTING STAGE
-    - name: Check Code Style
+    # Assuming maven-checkstyle-plugin is configured in pom.xml
+    - name: Run Checkstyle
       run: mvn checkstyle:check
-      # QUALITY GATE: Fails on style violations using Checkstyle
+      # QUALITY GATE: Fails on style violations
 
     # BUILD STAGE
     - name: Build project
-      run: mvn clean install -DskipTests=true
+      run: mvn clean install
       # QUALITY GATE: Fails on compilation errors
 
     # TEST STAGE
     - name: Run tests
       run: mvn test
-      # QUALITY GATE: Fails on test failures with JUnit
+      # QUALITY GATE: Fails on test failures
 
-    # PACKAGE APPLICATION
-    - name: Package application
-      run: mvn package
-      # Produces the JAR file artifact
-
-    # DOCKER BUILD STAGE
-    - name: Build Docker image
-      run: docker build -t pizzas-shop .
-
-    - name: Upload Docker image
-      if: ${{ github.event_name == 'push' }}
+    # BUILD AND PUSH DOCKER IMAGE
+    - name: Build and Push Docker Image
       uses: docker/build-push-action@v3
       with:
         context: .
+        file: Dockerfile
         push: true
-        tags: user/pizza-shop:latest
-
-  # ADDITIONAL QUALITY GATES AND DEPLOYMENT HANDLING
-  environment-setup:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Print environment variables
-      run: |
-        echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
-        echo "LOG_LEVEL=${{ secrets.LOG_LEVEL }}"
-
-    # Add new environment setup tasks here as required
-
-  # TIMEOUT PROTECTION
-  build-check:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Verify build time
-      run: echo "Build completed within the acceptable time frame."
+        tags: user/repository:latest
 
 
 
-### Key Configuration Details
+### Notes:
 
-- **Java Setup:** The environment is set up to use Java 11, specified in the `setup-java` action.
-- **Dependency Management:** Uses Maven for dependency resolution and build setup, with caching to speed up pipeline execution.
-- **Quality Gates:**
-  - **Linting:** Uses Maven's `checkstyle` plugin for code style verification.
-  - **Build:** Executes `mvn clean install` (excluding tests initially) to build the application.
-  - **Testing:** Runs `mvn test` to execute unit tests using JUnit.
-- **Docker Integration:**
-  - Builds and optionally uploads a Docker image with conditional execution triggered on `push` events.
-- **Environment Variables:** Prepared to use secrets for sensitive data such as `DATABASE_URL`.
+1. **Environment Setup**: This workflow uses Java 11 with the `temurin` distribution as per the Dockerfile. Ensure consistency in Java versions used in CI and Dockerfile.
 
-This configuration follows the best practices for CI setups and integrates smoothly with tools like Docker for deployment strategies.
+2. **Dependency Caching**: Maven dependencies are cached to speed up builds by avoiding frequent downloads.
+
+3. **Linting**: The configuration assumes you have `maven-checkstyle-plugin` set up in your `pom.xml`. If not, you can add it to enforce code style.
+
+4. **Build and Test Commands**: Extracted from the metadata, these commands (`mvn clean install` and `mvn test`) handle built stages and run tests, respectively.
+
+5. **Docker**: The Docker step builds your Docker image and pushes it to a registry. Ensure to configure secrets for access tokens if needed.
+
+6. **Quality Gates**: All stages are set to fail if any lint, build, or test steps encounter errors, enforcing quality checks before proceeding.
+
+Make sure this workflow fits into your repository structure by placing the YAML file inside `.github/workflows/`. Adjust the Docker tag and repository details as per your specific setup in Docker Hub or any other container registry you are using.
